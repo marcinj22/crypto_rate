@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import './Crypto.css'
 
 import axios from 'axios';
@@ -10,12 +10,18 @@ class Crypto extends Component {
         super(props);
 
         this.state = {
-            cryptoList: []
-        }; 
+            cryptoList: [],
+            filteredCryptoList: []
+        };
     }
 
     componentDidMount() {
         this.getCryptoData();
+        this.timerID = setInterval(() => this.getCryptoData(), 5000);
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.timerID);
     }
 
     getCryptoData = () => {
@@ -24,57 +30,77 @@ class Crypto extends Component {
             .then(res => {
                 const tickers = res.data;
 
-                this.setState((state) => {
-                    let newCryptoList = [];
-                    
-                    for (const [ticker, cryptoRate] of Object.entries(tickers)) {
+                let newCryptoList = [];
 
-                        let lastCryptoObj = state.cryptoList.find((cryptoObj) => {
-                            return(cryptoObj.currency === ticker);
-                        });
+                for (const [ticker, cryptoRate] of Object.entries(tickers)) {
 
-                        // console.log(lastCryptoObj);
+                    let lastCryptoObj = this.state.cryptoList.find((cryptoObj) => {
+                        return (cryptoObj.currency === ticker);
+                    });
 
-                        let newCryptoObj = {
-                            currency: ticker,
-                            symbol: cryptoRate.symbol,
-                            buy: cryptoRate.buy,
-                            sell: cryptoRate.sell,
-                            lastRate: cryptoRate.last,
-                        }
 
-                        if (lastCryptoObj !== undefined) {
+                    let newCryptoObj = {
+                        currency: ticker,
+                        symbol: cryptoRate.symbol,
+                        buy: cryptoRate.buy,
+                        sell: cryptoRate.sell,
+                        lastRate: cryptoRate.last,
+                    }
 
+                    if (lastCryptoObj !== undefined) {
+                        if (newCryptoObj.lastRate > lastCryptoObj.lastRate) {
+                            newCryptoObj.cssClass = 'green';
+                            newCryptoObj.htmlArray = String.fromCharCode(8593);
+                        } else if (newCryptoObj.lastRate < lastCryptoObj.lastRate) {
+                            newCryptoObj.cssClass = 'red';
+                            newCryptoObj.htmlArray = String.fromCharCode(8595);
                         } else {
                             newCryptoObj.cssClass = 'blue';
                             newCryptoObj.htmlArray = String.fromCharCode(8596);
-                            
-                            
                         }
-                        
-                        console.log(newCryptoObj);
 
-                        newCryptoList.push(newCryptoObj);
-                        
-                        console.log(newCryptoObj);
-
-                        console.log(newCryptoList);
+                    } else {
+                        newCryptoObj.cssClass = 'blue';
+                        newCryptoObj.htmlArray = String.fromCharCode(8596);
                     }
 
-                    return({
+                    newCryptoList.push(newCryptoObj);
+
+                }
+
+                this.setState(() => {
+
+                    return ({
                         cryptoList: newCryptoList
-                    })                    
+                    })
                 });
 
-                // console.log(res.data);
+                this.filterCryptoList();
+
             });
+
+    }
+
+    filterCryptoList = () => {
+        this._inputFilter.value = this._inputFilter.value.trim().toUpperCase();
+
+        this.setState((state) => {
+            let newFilterCryptoList = state.cryptoList.filter((cryptoObj) => {
+                return(cryptoObj.currency.includes(this._inputFilter.value));
+            });    
+
+            return({
+                filteredCryptoList: newFilterCryptoList
+            });
+
+        });
     }
 
     render() {
-        return(
+        return (
             <div className="Crypto">
-                <CryptoList cryptoList={this.state.cryptoList} />
-           
+                <input ref={element => this._inputFilter = element} onChange={this.filterCryptoList} type="text" placeholder="Filter"/>
+                <CryptoList cryptoList={this.state.filteredCryptoList} />
             </div>
         );
     }

@@ -8,8 +8,6 @@ function CryptoList(props) {
 
     let liElements = cryptoList.map((cryptoObj) => {
 
-        // console.log(cryptoObj.currency);
-
         return(
             <li key={cryptoObj.currency}>
                 <span className="cryptoLabel">Last rate:</span>
@@ -17,11 +15,8 @@ function CryptoList(props) {
                 <span className="CurrencyTicker">{cryptoObj.currency}</span>
                 <span className="CurrencySymbol">[{cryptoObj.symbol}]</span>
             </li>
-
         );
-    })
-
-    // console.log(cryptoList);
+    });
 
     return (
         <div className="CryptoList">
